@@ -1,8 +1,8 @@
 # Dependabot configuration.
 #
-# Updates are grouped into a single pull request per ecosystem and capped, so the
-# repository does not accumulate dozens of open dependency PRs. Security advisories
-# are still raised independently of these limits.
+# This preserved research release accepts security-update pull requests only.
+# Version-update PRs are disabled with a zero limit; GitHub handles security
+# updates separately from that limit.
 
 version: 2
 updates:
@@ -10,7 +10,7 @@ updates:
     directory: /prooflens-api
     schedule:
       interval: monthly
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
     groups:
       all-dependencies:
         patterns: ['*']
@@ -22,7 +22,7 @@ updates:
     directory: /web
     schedule:
       interval: monthly
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
     groups:
       all-dependencies:
         patterns: ['*']
@@ -34,7 +34,7 @@ updates:
     directory: /mobile
     schedule:
       interval: monthly
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 0
     groups:
       all-dependencies:
         patterns: ['*']
@@ -46,7 +46,7 @@ updates:
     directory: /
     schedule:
       interval: monthly
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 0
     groups:
       all-actions:
         patterns: ['*']
