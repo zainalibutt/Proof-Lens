@@ -1,0 +1,16 @@
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+android/
+ios/
+.env
+.env.*
+!**/.env.example
+supabase/.temp/
