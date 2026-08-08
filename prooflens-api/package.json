@@ -18,26 +18,26 @@
     "@aws-sdk/client-s3": "^3.914.0",
     "@aws-sdk/s3-presigned-post": "^3.914.0",
     "@aws-sdk/s3-request-presigner": "^3.910.0",
-    "@supabase/supabase-js": "^2.75.0",
-    "archiver": "^7.0.1",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
+    "@supabase/supabase-js": "^2.112.1",
+    "archiver": "^8.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "helmet": "^8.3.0",
     "morgan": "^1.10.1",
     "multer": "^2.2.0",
     "tweetnacl": "^1.0.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.3",
+    "@types/archiver": "^8.0.0",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.2.0",
-    "@types/node": "^24.7.2",
-    "js-sha256": "^0.11.1",
+    "@types/node": "^26.1.2",
+    "js-sha256": "^1.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
