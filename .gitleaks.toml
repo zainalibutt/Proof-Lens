@@ -1,0 +1,38 @@
+# Gitleaks configuration for ProofLens
+#
+# Extends the default ruleset. The allowlist below covers four findings that were
+# individually reviewed and confirmed to be false positives. Each entry is documented;
+# please do not add blanket exclusions.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Reviewed false positives — see comments for the justification of each"
+
+paths = [
+  # Supabase *anon* keys. These are public by design: the anon key is shipped to
+  # clients and constrained by row-level security. Verified via JWT payload
+  # inspection (role="anon", not "service_role"). The service_role key is runtime
+  # environment configuration and is never committed.
+  #
+  # Note: this skips all rules for these three files. They are policy-bound to
+  # contain placeholders and the public anon key only — never a real secret.
+  # See CONTRIBUTING.md.
+  '''^mobile/\.env\.example$''',
+  '''^web/\.env\.example$''',
+  '''^prooflens-api/\.env\.example$''',
+]
+
+regexes = [
+  # Negative-control fixture in the cryptographic assurance suite. This string is
+  # deliberately used to prove that token verification FAILS under a wrong secret
+  # (SECTION C, TOKEN-WRONG-SECRET). It has never been a live credential.
+  '''prooflens-v17-1-test-secret''',
+
+  # Postgres column definition in the canonical schema. The default
+  # `generic-api-key` rule matches "credential" followed by the next identifier;
+  # both are column names/type declarations, not values.
+  '''credential_json\s+jsonb''',
+  '''^signature_b64$''',
+]

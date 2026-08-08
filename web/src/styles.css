@@ -1,0 +1,10 @@
+/* ProofLens Design System — Import order matters */
+
+@import "./styles/tokens.css";
+@import "./styles/reset.css";
+@import "./styles/layout.css";
+@import "./styles/components.css";
+@import "./styles/utilities.css";
+@import "./styles/animations.css";
+@import "./styles/responsive.css";
+@import "./styles/features.css";
