@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API build & crypto assurance
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.x', '24.x']
+    defaults:
+      run:
+        working-directory: prooflens-api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: prooflens-api/package-lock.json
+      - run: npm ci
+      - name: TypeScript build
+        run: npm run build
+      - name: Cryptographic assurance checks
+        run: npm run test:crypto-assurance
+      - name: Security regression checks
+        run: npm run test:security
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+  web:
+    name: Web production build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.x', '24.x']
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Vite production build
+        run: npm run build
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+  mobile:
+    name: Mobile lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - name: ESLint
+        run: npx expo lint
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Expo project health
+        run: npx --yes expo-doctor@1.20.1
+
+  bundles:
+    name: Evidence bundle verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify sample evidence bundle offline
+        working-directory: docs/captureevidencebundle
+        run: bash verify.sh
