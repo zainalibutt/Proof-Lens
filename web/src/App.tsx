@@ -379,13 +379,13 @@ function AuthenticatedShell({ session, onSignOut }: { session: any; onSignOut: (
     <div className="page">
       <HeroHeader
         rightContent={
-          <div className="row" style={{ gap: 14 }}>
-            <button className="secondary" onClick={() => setShowTutorial(true)} style={{ fontSize: "0.8125rem" }}>Guide</button>
-            <span className="muted" style={{ fontSize: "0.8125rem" }}>
+          <div className="session-actions">
+            <button className="secondary session-actions__guide" onClick={() => setShowTutorial(true)}>Guide</button>
+            <span className="muted session-actions__identity">
               <Mail size={12} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4 }} />
               {session.user.email}
             </span>
-            <button className="secondary" onClick={onSignOut}>
+            <button className="secondary session-actions__sign-out" onClick={onSignOut} aria-label="Sign out">
               <LogOut size={14} strokeWidth={2} /> Sign out
             </button>
           </div>

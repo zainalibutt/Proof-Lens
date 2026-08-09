@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import StatusBadge from "./StatusBadge";
 import { Image, Layers, Music, Hash } from "lucide-react";
 
@@ -33,19 +33,41 @@ export default function CaptureCard({
   frameIndex,
   thumbnailUrl,
 }: CaptureCardProps) {
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const shortId = id ? `${id.slice(0, 8)}…` : "";
   const { Icon: TypeIcon, label: typeLabel } = typeConfig[type] ?? typeConfig.single;
+
+  useEffect(() => {
+    setThumbnailFailed(false);
+  }, [thumbnailUrl]);
+
+  const capturedAt = timestamp
+    ? new Date(timestamp).toLocaleString()
+    : "time unavailable";
 
   return (
     <button
       className={`capture-card ${selected ? "capture-card--selected" : ""}`}
       onClick={onClick}
       type="button"
+      aria-pressed={selected}
+      aria-label={`${typeLabel} evidence ${shortId || id}, ${status}, captured ${capturedAt}`}
     >
       {/* Thumbnail preview */}
-      {thumbnailUrl && (
+      {thumbnailUrl && !thumbnailFailed ? (
         <div className="capture-card__thumb">
-          <img src={thumbnailUrl} alt="" loading="lazy" />
+          <img
+            src={thumbnailUrl}
+            alt={`${typeLabel} evidence captured ${capturedAt}`}
+            loading="lazy"
+            decoding="async"
+            onError={() => setThumbnailFailed(true)}
+          />
+        </div>
+      ) : (
+        <div className="capture-card__thumb capture-card__thumb--fallback" aria-hidden="true">
+          <Image size={22} strokeWidth={1.5} />
+          <span>Preview unavailable</span>
         </div>
       )}
 

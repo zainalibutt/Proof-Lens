@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchCredentials,
   fetchBursts,
@@ -13,29 +13,19 @@ import {
 } from "../lib/api";
 import SectionCard from "../components/SectionCard";
 import CaptureCard from "../components/CaptureCard";
+import EvidenceInspector from "../components/EvidenceInspector";
 import StatusBadge from "../components/StatusBadge";
 import EmptyState from "../components/EmptyState";
 import {
   RefreshCw,
-  Share2,
-  Download,
-  ExternalLink,
-  FileText,
-  Copy,
   ChevronDown,
   Layers,
   Image as ImageIcon,
   Music,
   Clock,
-  Smartphone,
-  Hash,
-  Anchor,
-  Shield,
-  Code2,
-  FileKey,
 } from "lucide-react";
 
-const BurstFrameStrip = React.lazy(() => import("../components/BurstFrameStrip"));
+const BurstFrameStrip = lazy(() => import("../components/BurstFrameStrip"));
 
 function LazyFallback() {
   return <div style={{ display:"flex", justifyContent:"center", padding:24 }}><div className="spinner" /></div>;
@@ -88,6 +78,7 @@ export default function EvidencePage({ accessToken }: Props) {
   const [burstsError, setBurstsError] = useState<string | null>(null);
   const [expandedBurst, setExpandedBurst] = useState<BurstWithFrames | null>(null);
   const [expandBusy, setExpandBusy] = useState(false);
+  const [loadedViews, setLoadedViews] = useState({ captures: false, audio: false });
 
   const [viewMode, setViewMode] = useState<"bursts" | "captures" | "audio">("bursts");
 
@@ -107,13 +98,6 @@ export default function EvidencePage({ accessToken }: Props) {
   const [audioBundleBusy, setAudioBundleBusy] = useState(false);
   const [audioBundleError, setAudioBundleError] = useState<string | null>(null);
 
-  const captureDetailRef = useRef<HTMLDivElement | null>(null);
-  const captureShareResultRef = useRef<HTMLDivElement | null>(null);
-  const audioDetailRef = useRef<HTMLDivElement | null>(null);
-  const audioShareResultRef = useRef<HTMLDivElement | null>(null);
-  const shouldScrollToCaptureDetailRef = useRef(false);
-  const shouldScrollToAudioDetailRef = useRef(false);
-
   /* Loaders */
   const loadCreds = useCallback(async () => {
     setCredsError(null); setCredsBusy(true);
@@ -121,7 +105,10 @@ export default function EvidencePage({ accessToken }: Props) {
       const list = (await fetchCredentials(accessToken)) as CredentialRow[];
       setCreds(list);
       if (list.length) setSelectedCredId((p) => p ?? list[0]?.id ?? null); else setSelectedCredId(null);
-    } catch (e: any) { setCredsError(e?.message || "Failed to load credentials"); } finally { setCredsBusy(false); }
+    } catch (e: any) { setCredsError(e?.message || "Failed to load credentials"); } finally {
+      setCredsBusy(false);
+      setLoadedViews((current) => ({ ...current, captures: true }));
+    }
   }, [accessToken]);
 
   const loadBursts = useCallback(async () => {
@@ -130,8 +117,10 @@ export default function EvidencePage({ accessToken }: Props) {
       const items = await fetchBursts(accessToken);
       const anchored = items.filter((b: any) => b.status === "anchored");
       setBursts(anchored);
-      if (anchored.length) setSelectedCredId(null); else setSelectedCredId(null);
-    } catch (e: any) { setBurstsError(e?.message || "Failed to load bursts"); } finally { setBurstsBusy(false); }
+      setSelectedCredId(null);
+    } catch (e: any) { setBurstsError(e?.message || "Failed to load bursts"); } finally {
+      setBurstsBusy(false);
+    }
   }, [accessToken]);
 
   const loadAudio = useCallback(async () => {
@@ -140,10 +129,20 @@ export default function EvidencePage({ accessToken }: Props) {
       const items = await fetchAudioRecords(accessToken);
       setAudioRecords(items as AudioRecord[]);
       if (items.length) setSelectedAudioId((p) => p ?? (items[0].id ?? null)); else setSelectedAudioId(null);
-    } catch (e: any) { setAudioError(e?.message || "Failed to load audio records"); } finally { setAudioBusy(false); }
+    } catch (e: any) { setAudioError(e?.message || "Failed to load audio records"); } finally {
+      setAudioBusy(false);
+      setLoadedViews((current) => ({ ...current, audio: true }));
+    }
   }, [accessToken]);
 
-  useEffect(() => { loadCreds(); loadBursts(); loadAudio(); }, [loadCreds, loadBursts, loadAudio]);
+  useEffect(() => {
+    loadBursts();
+  }, [loadBursts]);
+
+  useEffect(() => {
+    if (viewMode === "captures" && !loadedViews.captures) loadCreds();
+    if (viewMode === "audio" && !loadedViews.audio) loadAudio();
+  }, [loadAudio, loadCreds, loadedViews.audio, loadedViews.captures, viewMode]);
 
   /* Handlers */
   const onExpandBurst = async (burstId: string) => {
@@ -154,14 +153,46 @@ export default function EvidencePage({ accessToken }: Props) {
     } catch (e: any) { setBurstsError(e?.message || "Failed to load burst frames"); } finally { setExpandBusy(false); }
   };
 
-  const selectedCred = creds.find((c) => c.id === selectedCredId) ?? null;
+  const selectedCred = useMemo(
+    () => creds.find((c) => c.id === selectedCredId)
+      ?? expandedBurst?.frames.anchored.find((c) => c.id === selectedCredId)
+      ?? null,
+    [creds, expandedBurst, selectedCredId],
+  );
   const selectedMediaUrl = selectedCred?.media_url ?? (selectedCred ? mediaUrlForKey(selectedCred.media_key ?? null) : null);
   const selectedTsrUrl = selectedCred?.tsr_url ?? (selectedCred ? tsrUrlForKey(selectedCred.media_key ?? null) : null);
-  const selectedSha = selectedCred?.sha256 ?? "";
-  const selectedId = selectedCred?.id ?? "";
 
   const selectedAudio = audioRecords.find((a) => a.id === selectedAudioId) ?? null;
   const selectedAudioUrl = selectedAudio?.media_url ?? null;
+
+  const selectCapture = (capture: CredentialRow) => {
+    setSelectedCredId(capture.id ?? null);
+    setSelectedAudioId(null);
+    setShareUrl(null);
+    setShareExpiresAt(null);
+    setShareError(null);
+    setBundleError(null);
+  };
+
+  const selectAudio = (audio: AudioRecord) => {
+    setSelectedAudioId(audio.id ?? null);
+    setSelectedCredId(null);
+    setAudioShareUrl(null);
+    setAudioShareExpiresAt(null);
+    setAudioShareError(null);
+    setAudioBundleError(null);
+  };
+
+  const closeInspector = () => {
+    setSelectedCredId(null);
+    setSelectedAudioId(null);
+  };
+
+  const changeView = (mode: "bursts" | "captures" | "audio") => {
+    setViewMode(mode);
+    if (mode === "audio") setSelectedCredId(null);
+    else setSelectedAudioId(null);
+  };
 
   const onCreateShare = async () => {
     setShareError(null); setShareUrl(null); setShareExpiresAt(null);
@@ -203,33 +234,6 @@ export default function EvidencePage({ accessToken }: Props) {
     finally { setAudioBundleBusy(false); }
   };
 
-  /* Scroll effects */
-  useEffect(() => {
-    if (!shouldScrollToCaptureDetailRef.current || viewMode !== "captures" || !selectedCredId) return;
-    shouldScrollToCaptureDetailRef.current = false;
-    const timer = window.setTimeout(() => { captureDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
-    return () => window.clearTimeout(timer);
-  }, [viewMode, selectedCredId]);
-
-  useEffect(() => {
-    if (!shareUrl) return;
-    const timer = window.setTimeout(() => { captureShareResultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
-    return () => window.clearTimeout(timer);
-  }, [shareUrl]);
-
-  useEffect(() => {
-    if (!shouldScrollToAudioDetailRef.current || viewMode !== "audio" || !selectedAudioId) return;
-    shouldScrollToAudioDetailRef.current = false;
-    const timer = window.setTimeout(() => { audioDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
-    return () => window.clearTimeout(timer);
-  }, [viewMode, selectedAudioId]);
-
-  useEffect(() => {
-    if (!audioShareUrl) return;
-    const timer = window.setTimeout(() => { audioShareResultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
-    return () => window.clearTimeout(timer);
-  }, [audioShareUrl]);
-
   /* Grouping helpers */
   const audioGroups = useMemo((): Array<{ day: string; items: AudioRecord[] }> => {
     const groups = new Map<string, AudioRecord[]>();
@@ -263,12 +267,6 @@ export default function EvidencePage({ accessToken }: Props) {
       });
   }, [creds]);
 
-  const formatValue = (value: any) => {
-    if (value === null || value === undefined) return "";
-    if (typeof value === "string") return value;
-    return JSON.stringify(value, null, 2);
-  };
-
   /* Render */
   return (
     <Suspense fallback={<LazyFallback />}>
@@ -280,19 +278,21 @@ export default function EvidencePage({ accessToken }: Props) {
           </p>
         </div>
 
-        {/* Tabs + Refresh */}
-        <SectionCard>
+        <div className="evidence-workspace">
+          <div className="evidence-workspace__collection">
+          {/* Tabs + Refresh */}
+          <SectionCard>
           <div className="row space" style={{ marginBottom: 8 }}>
-            <div className="tabs">
-              <button className={viewMode === "bursts" ? "active" : ""} onClick={() => setViewMode("bursts")}>
+            <div className="tabs" role="tablist" aria-label="Evidence type">
+              <button role="tab" aria-selected={viewMode === "bursts"} className={viewMode === "bursts" ? "active" : ""} onClick={() => changeView("bursts")}>
                 <Layers size={13} strokeWidth={2} style={{ marginRight: 4 }} />
                 Bursts
               </button>
-              <button className={viewMode === "captures" ? "active" : ""} onClick={() => setViewMode("captures")}>
+              <button role="tab" aria-selected={viewMode === "captures"} className={viewMode === "captures" ? "active" : ""} onClick={() => changeView("captures")}>
                 <ImageIcon size={13} strokeWidth={2} style={{ marginRight: 4 }} />
                 All Frames
               </button>
-              <button className={viewMode === "audio" ? "active" : ""} onClick={() => setViewMode("audio")}>
+              <button role="tab" aria-selected={viewMode === "audio"} className={viewMode === "audio" ? "active" : ""} onClick={() => changeView("audio")}>
                 <Music size={13} strokeWidth={2} style={{ marginRight: 4 }} />
                 Audio
               </button>
@@ -324,8 +324,12 @@ export default function EvidencePage({ accessToken }: Props) {
                 const isExpanded = expandedBurst?.burst?.id === burst.id;
                 return (
                   <div key={burst.id} className="detail-card">
-                    <div className="row space" style={{ cursor: "pointer", padding: "4px 0" }}
-                      onClick={() => isExpanded ? setExpandedBurst(null) : onExpandBurst(burst.id)}>
+                    <button
+                      type="button"
+                      className="evidence-burst__toggle"
+                      aria-expanded={isExpanded}
+                      onClick={() => isExpanded ? setExpandedBurst(null) : onExpandBurst(burst.id)}
+                    >
                       <div>
                         <div className="row" style={{ gap: 8, alignItems: "center" }}>
                           <StatusBadge status={burst.status} />
@@ -341,10 +345,10 @@ export default function EvidencePage({ accessToken }: Props) {
                           {new Date(burst.created_at).toLocaleString()} &middot; {burst.frame_total} frame{burst.frame_total !== 1 ? "s" : ""}
                         </div>
                       </div>
-                      <div style={{ color: "var(--text-muted)", transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "rotate(0)" }}>
+                      <span className={`evidence-burst__chevron${isExpanded ? " evidence-burst__chevron--open" : ""}`}>
                         <ChevronDown size={18} strokeWidth={2} />
-                      </div>
-                    </div>
+                      </span>
+                    </button>
 
                     {isExpanded && (
                       <div className="fade-in" style={{ marginTop: 12 }}>
@@ -364,9 +368,7 @@ export default function EvidencePage({ accessToken }: Props) {
                                 frames={expandedBurst.frames.anchored}
                                 selectedFrameId={selectedCredId}
                                 onFrameClick={(frame: any) => {
-                                  shouldScrollToCaptureDetailRef.current = true;
-                                  setSelectedCredId(frame.id ?? null);
-                                  setViewMode("captures");
+                                  selectCapture(frame);
                                 }}
                               />
                             )}
@@ -401,7 +403,7 @@ export default function EvidencePage({ accessToken }: Props) {
                         type="single"
                         frameIndex={c.metadata?.frame_index}
                         selected={c.id === selectedCredId}
-                        onClick={() => { shouldScrollToCaptureDetailRef.current = true; setSelectedCredId(c.id ?? null); }}
+                        onClick={() => selectCapture(c)}
                         thumbnailUrl={c.media_url ?? mediaUrlForKey(c.media_key ?? null)}
                       />
                     ))}
@@ -433,7 +435,7 @@ export default function EvidencePage({ accessToken }: Props) {
                         label={a.title || "Untitled"}
                         sublabel={`${Math.round(((a.duration ?? (a as any).duration_ms ?? 0)) / 1000)}s`}
                         selected={a.id === selectedAudioId}
-                        onClick={() => { shouldScrollToAudioDetailRef.current = true; setSelectedAudioId(a.id ?? null); }}
+                        onClick={() => selectAudio(a)}
                       />
                     ))}
                   </div>
@@ -441,250 +443,44 @@ export default function EvidencePage({ accessToken }: Props) {
               ))}
             </div>
           )}
-        </SectionCard>
-
-        {/* Capture detail panel */}
-        {viewMode === "captures" && selectedCred && (
-          <div ref={captureDetailRef}>
-            <SectionCard className="fade-in">
-              <div className="detail-panel__header">
-                <div>
-                  <h3>
-                    <FileKey size={18} strokeWidth={2} style={{ display: "inline", verticalAlign: "-3px", marginRight: 8, color: "var(--primary-light)" }} />
-                    Capture Details
-                  </h3>
-                  <div className="mono small" style={{ marginTop: 8 }}>{selectedId || selectedSha}</div>
-                </div>
-                <div className="links">
-                  <button className="secondary" onClick={onCreateShare} disabled={shareBusy}>
-                    <Share2 size={14} strokeWidth={2} />
-                    {shareBusy ? "Creating\u2026" : "Share Link"}
-                  </button>
-                  <button className="secondary" onClick={onDownloadBundle} disabled={bundleBusy}>
-                    <Download size={14} strokeWidth={2} />
-                    {bundleBusy ? "Preparing\u2026" : "Evidence Bundle"}
-                  </button>
-                  {selectedMediaUrl && (
-                    <a href={selectedMediaUrl} target="_blank" rel="noreferrer">
-                      <button className="secondary"><ExternalLink size={14} strokeWidth={2} /> Download JPG</button>
-                    </a>
-                  )}
-                  {selectedTsrUrl && (
-                    <a href={selectedTsrUrl} target="_blank" rel="noreferrer">
-                      <button className="secondary"><FileText size={14} strokeWidth={2} /> View TSR</button>
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {selectedMediaUrl && (
-                <div className="detail-panel__preview fade-in">
-                  <img src={selectedMediaUrl} alt="Capture preview" loading="lazy" />
-                </div>
-              )}
-
-              <div className="detail-panel__meta">
-                {selectedCred.timestamp && (
-                  <div className="detail-panel__meta-item">
-                    <Clock size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Captured</span>
-                    <span className="detail-panel__meta-value">{new Date(selectedCred.timestamp).toLocaleString()}</span>
-                  </div>
-                )}
-                {selectedCred.device_id && (
-                  <div className="detail-panel__meta-item">
-                    <Smartphone size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Device</span>
-                    <span className="detail-panel__meta-value font-mono">{selectedCred.device_id}</span>
-                  </div>
-                )}
-                {selectedCred.sha256 && (
-                  <div className="detail-panel__meta-item">
-                    <Hash size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">SHA-256</span>
-                    <span className="detail-panel__meta-value font-mono" style={{ fontSize: "0.6875rem" }}>{selectedCred.sha256}</span>
-                  </div>
-                )}
-                {(selectedCred.tsa_time || selectedCred.anchor_timestamp) && (
-                  <div className="detail-panel__meta-item">
-                    <Anchor size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Anchor</span>
-                    <span className="detail-panel__meta-value">{new Date(selectedCred.tsa_time || selectedCred.anchor_timestamp).toLocaleString()}</span>
-                  </div>
-                )}
-                {selectedCred.status && (
-                  <div className="detail-panel__meta-item">
-                    <Shield size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Status</span>
-                    <StatusBadge status={selectedCred.status} size="sm" />
-                  </div>
-                )}
-              </div>
-
-              {bundleError && <div className="alert error">{bundleError}</div>}
-
-              {(shareError || shareUrl) && (
-                <div className="stack">
-                  {shareError && <div className="alert error">{shareError}</div>}
-                  {shareUrl && (
-                    <div ref={captureShareResultRef} className="result fade-in">
-                      <div className="muted"><strong>Share link created</strong></div>
-                      <div className="mono">{shareUrl}</div>
-                      <div className="row">
-                        <button className="secondary" onClick={onCopyShare}>
-                          <Copy size={14} strokeWidth={2} /> Copy Link
-                        </button>
-                      </div>
-                      <div className="muted" style={{ fontSize: "0.8125rem" }}>
-                        Anyone with this link can verify this specific capture until it expires.
-                      </div>
-                      {shareExpiresAt && (
-                        <div className="muted">
-                          <Clock size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 3 }} />
-                          <strong>Expires:</strong> {new Date(shareExpiresAt).toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <details className="raw-json-details">
-                <summary className="raw-json-summary">
-                  <Code2 size={13} strokeWidth={2} /> View Raw Credential JSON
-                  <ChevronDown size={13} strokeWidth={2} className="raw-json-chevron" />
-                </summary>
-                <div className="kv-list fade-in">
-                  {Object.entries(selectedCred).map(([key, value]) => (
-                    <div key={key} className="kv-row">
-                      <div className="kv-key">{key}</div>
-                      <div className="kv-value">{formatValue(value)}</div>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            </SectionCard>
+          </SectionCard>
           </div>
-        )}
 
-        {/* Audio detail panel */}
-        {viewMode === "audio" && selectedAudio && (
-          <div ref={audioDetailRef}>
-            <SectionCard className="fade-in">
-              <div className="detail-panel__header">
-                <div>
-                  <h3>
-                    <Music size={18} strokeWidth={2} style={{ display: "inline", verticalAlign: "-3px", marginRight: 8, color: "var(--primary-light)" }} />
-                    Audio Details
-                  </h3>
-                  <div className="mono small" style={{ marginTop: 8 }}>{selectedAudio.id || ""}</div>
-                </div>
-                <div className="links">
-                  <button className="secondary" onClick={onCreateAudioShare} disabled={audioShareBusy}>
-                    <Share2 size={14} strokeWidth={2} />
-                    {audioShareBusy ? "Creating\u2026" : "Share Link"}
-                  </button>
-                  <button className="secondary" onClick={onDownloadAudioBundle} disabled={audioBundleBusy}>
-                    <Download size={14} strokeWidth={2} />
-                    {audioBundleBusy ? "Preparing\u2026" : "Evidence Bundle"}
-                  </button>
-                  {selectedAudioUrl && (
-                    <a href={selectedAudioUrl} target="_blank" rel="noreferrer">
-                      <button className="secondary"><ExternalLink size={14} strokeWidth={2} /> Download</button>
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {selectedAudioUrl && (
-                <div className="audio-preview fade-in">
-                  <audio controls src={selectedAudioUrl} style={{ width: "100%", borderRadius: 12 }} />
-                </div>
-              )}
-
-              <div className="detail-panel__meta">
-                {selectedAudio.created_at && (
-                  <div className="detail-panel__meta-item">
-                    <Clock size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Created</span>
-                    <span className="detail-panel__meta-value">{new Date(selectedAudio.created_at).toLocaleString()}</span>
-                  </div>
-                )}
-                {selectedAudio.device_id && (
-                  <div className="detail-panel__meta-item">
-                    <Smartphone size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Device</span>
-                    <span className="detail-panel__meta-value font-mono">{selectedAudio.device_id}</span>
-                  </div>
-                )}
-                {selectedAudio.sha256 && (
-                  <div className="detail-panel__meta-item">
-                    <Hash size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">SHA-256</span>
-                    <span className="detail-panel__meta-value font-mono" style={{ fontSize: "0.6875rem" }}>{selectedAudio.sha256}</span>
-                  </div>
-                )}
-                {selectedAudio.anchor_timestamp && (
-                  <div className="detail-panel__meta-item">
-                    <Anchor size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">Anchor</span>
-                    <span className="detail-panel__meta-value">{new Date(selectedAudio.anchor_timestamp).toLocaleString()}</span>
-                  </div>
-                )}
-                {selectedAudio.tsa_status && (
-                  <div className="detail-panel__meta-item">
-                    <Shield size={13} strokeWidth={2} />
-                    <span className="detail-panel__meta-label">TSA Status</span>
-                    <StatusBadge status={selectedAudio.tsa_status} size="sm" />
-                  </div>
-                )}
-              </div>
-
-              {audioBundleError && <div className="alert error">{audioBundleError}</div>}
-
-              {(audioShareError || audioShareUrl) && (
-                <div className="stack">
-                  {audioShareError && <div className="alert error">{audioShareError}</div>}
-                  {audioShareUrl && (
-                    <div ref={audioShareResultRef} className="result fade-in">
-                      <div className="muted"><strong>Share link created</strong></div>
-                      <div className="mono">{audioShareUrl}</div>
-                      <div className="row">
-                        <button className="secondary" onClick={onCopyAudioShare}>
-                          <Copy size={14} strokeWidth={2} /> Copy Link
-                        </button>
-                      </div>
-                      <div className="muted" style={{ fontSize: "0.8125rem" }}>
-                        Anyone with this link can verify this audio recording until it expires.
-                      </div>
-                      {audioShareExpiresAt && (
-                        <div className="muted">
-                          <Clock size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 3 }} />
-                          <strong>Expires:</strong> {new Date(audioShareExpiresAt).toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <details className="raw-json-details">
-                <summary className="raw-json-summary">
-                  <Code2 size={13} strokeWidth={2} /> View Raw Credential JSON
-                  <ChevronDown size={13} strokeWidth={2} className="raw-json-chevron" />
-                </summary>
-                <div className="kv-list fade-in">
-                  {Object.entries(selectedAudio).map(([key, value]) => (
-                    <div key={key} className="kv-row">
-                      <div className="kv-key">{key}</div>
-                      <div className="kv-value">{formatValue(value)}</div>
-                    </div>
-                  ))}
-                </div>
-              </details>
+          <aside
+            className={`evidence-workspace__inspector${selectedCred || selectedAudio ? " evidence-workspace__inspector--open" : ""}`}
+            aria-label="Evidence details"
+          >
+            <SectionCard className="evidence-inspector">
+              <EvidenceInspector
+                capture={selectedCred}
+                audio={selectedAudio}
+                mediaUrl={selectedMediaUrl}
+                tsrUrl={selectedTsrUrl}
+                audioUrl={selectedAudioUrl}
+                shareUrl={shareUrl}
+                shareExpiresAt={shareExpiresAt}
+                shareBusy={shareBusy}
+                shareError={shareError}
+                bundleBusy={bundleBusy}
+                bundleError={bundleError}
+                audioShareUrl={audioShareUrl}
+                audioShareExpiresAt={audioShareExpiresAt}
+                audioShareBusy={audioShareBusy}
+                audioShareError={audioShareError}
+                audioBundleBusy={audioBundleBusy}
+                audioBundleError={audioBundleError}
+                onCreateShare={onCreateShare}
+                onCopyShare={onCopyShare}
+                onDownloadBundle={onDownloadBundle}
+                onCreateAudioShare={onCreateAudioShare}
+                onCopyAudioShare={onCopyAudioShare}
+                onDownloadAudioBundle={onDownloadAudioBundle}
+                onClose={closeInspector}
+              />
             </SectionCard>
-          </div>
-        )}
+          </aside>
+        </div>
+
       </div>
     </Suspense>
   );

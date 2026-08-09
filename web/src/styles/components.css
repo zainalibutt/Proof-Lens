@@ -235,8 +235,24 @@ input::placeholder, .input::placeholder {
   transition: transform var(--duration-normal) var(--ease-out);
 }
 
+.capture-card__thumb--fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  text-align: center;
+}
+
 .capture-card:hover .capture-card__thumb img {
   transform: scale(1.03);
+}
+
+.capture-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 230px;
 }
 
 .capture-card__label {

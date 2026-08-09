@@ -10,7 +10,7 @@ const links = [
 
 export default function NavBar() {
   return (
-    <nav className="top-nav">
+    <nav className="top-nav" aria-label="Primary navigation">
       <ul className="top-nav__list">
         {links.map(({ to, label, icon: Icon }) => (
           <li key={to}>

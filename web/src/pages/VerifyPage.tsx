@@ -66,7 +66,7 @@ export default function VerifyPage({ accessToken }: Props) {
             />
 
             <div className="row">
-              <button onClick={onVerify} disabled={verifyBusy}>
+              <button onClick={onVerify} disabled={verifyBusy || !uploadFile}>
                 <Shield size={14} strokeWidth={2} />
                 {verifyBusy ? "Verifying\u2026" : "Verify"}
               </button>
