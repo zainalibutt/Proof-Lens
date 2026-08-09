@@ -1,31 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { Smartphone, Shield, FolderOpen } from "lucide-react";
-import SectionCard from "../components/SectionCard";
+import {
+  ArrowRight,
+  Check,
+  Clock3,
+  FileCheck2,
+  Fingerprint,
+  Focus,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 
-const actions = [
+const proofs = [
   {
-    title: "Capture Evidence",
-    description:
-      "Use your mobile device to capture and sign tamper-evident media.",
-    cta: "Start Capture",
-    route: "/capture",
-    Icon: Smartphone,
+    label: "Integrity",
+    detail: "The file bytes still match the capture record.",
+    Icon: FileCheck2,
   },
   {
-    title: "Verify Media",
-    description:
-      "Upload a file to verify its cryptographic authenticity.",
-    cta: "Verify File",
-    route: "/verify",
-    Icon: Shield,
+    label: "Device-linked",
+    detail: "A registered device key signed the capture hash.",
+    Icon: Fingerprint,
   },
   {
-    title: "Your Evidence",
-    description:
-      "Browse your captured and signed media.",
-    cta: "View Evidence",
-    route: "/evidence",
-    Icon: FolderOpen,
+    label: "Trusted time",
+    detail: "An independent RFC 3161 authority anchored the record.",
+    Icon: Clock3,
   },
 ] as const;
 
@@ -33,24 +32,70 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="dashboard-grid fade-in">
-      {actions.map(({ title, description, cta, route, Icon }) => (
-        <SectionCard key={route} glow>
-          <div className="dashboard-action-card">
-            <div className="dashboard-action-card__icon-ring">
-              <Icon size={28} strokeWidth={1.5} />
-            </div>
-            <h2 className="dashboard-action-card__title">{title}</h2>
-            <p className="dashboard-action-card__desc muted">{description}</p>
-            <button
-              className="dashboard-action-card__cta"
-              onClick={() => navigate(route)}
-            >
-              {cta}
+    <main className="forensic-home fade-in">
+      <section className="forensic-home__hero">
+        <div className="forensic-home__copy">
+          <span className="forensic-home__eyebrow">
+            <Focus size={13} /> Independent media provenance
+          </span>
+          <h2>Preserve the proof behind the file.</h2>
+          <p>
+            Capture on your phone, anchor the record automatically, then verify
+            the same evidence in a browser or offline bundle.
+          </p>
+          <div className="forensic-home__actions">
+            <button onClick={() => navigate("/capture")}>
+              <Smartphone size={16} /> Capture evidence
+            </button>
+            <button className="secondary" onClick={() => navigate("/verify")}>
+              Verify a file <ArrowRight size={15} />
             </button>
           </div>
-        </SectionCard>
-      ))}
-    </div>
+        </div>
+
+        <div className="forensic-home__assurance" aria-label="ProofLens assurance model">
+          <div className="forensic-home__assurance-header">
+            <span className="forensic-home__assurance-icon"><ShieldCheck size={20} /></span>
+            <div>
+              <span>Assurance model</span>
+              <strong>Three checks. One bounded claim.</strong>
+            </div>
+          </div>
+          <div className="forensic-home__proofs">
+            {proofs.map(({ label, detail, Icon }) => (
+              <div className="forensic-home__proof" key={label}>
+                <Icon size={16} />
+                <div>
+                  <strong>{label}</strong>
+                  <span>{detail}</span>
+                </div>
+                <Check size={14} className="forensic-home__check" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="forensic-home__boundary">
+        <div>
+          <span className="forensic-home__boundary-label">Trust boundary</span>
+          <h3>ProofLens verifies provenance, not reality.</h3>
+        </div>
+        <p>
+          It can show that specific file bytes were signed by a registered device
+          and anchored in time. It cannot prove that the depicted scene was truthful
+          or unstaged.
+        </p>
+      </section>
+
+      <button className="forensic-home__library" onClick={() => navigate("/evidence")}>
+        <span className="forensic-home__library-icon"><FileCheck2 size={20} /></span>
+        <span>
+          <strong>Open evidence library</strong>
+          <small>Inspect captures, recordings, signatures and portable bundles.</small>
+        </span>
+        <ArrowRight size={17} />
+      </button>
+    </main>
   );
 }

@@ -6,6 +6,7 @@ import * as Linking from "expo-linking";
 import { StyleSheet, Text, View } from "react-native";
 import { supabase } from "../lib/supabase";
 import { TutorialFlowProvider } from "../lib/tutorialFlow";
+import { palette } from "../lib/theme";
 
 function resolveDeepLinkTarget(url: string): "/capture" | "/home" | null {
   const raw = String(url || "").trim();
@@ -99,7 +100,7 @@ export default function RootLayout() {
     <TutorialFlowProvider>
       {showLinkedHint ? (
         <View style={styles.deepLinkBanner} pointerEvents="none">
-          <Text style={styles.deepLinkBannerText}>You are ready to capture secure evidence.</Text>
+          <Text style={styles.deepLinkBannerText}>ProofLens is ready to capture.</Text>
         </View>
       ) : null}
       <Stack screenOptions={{ headerShown: false }} />
@@ -118,11 +119,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "rgba(129, 140, 248, 0.5)",
-    backgroundColor: "rgba(30, 41, 59, 0.92)",
+    borderColor: palette.borderStrong,
+    backgroundColor: palette.surfaceRaised,
   },
   deepLinkBannerText: {
-    color: "#e5e7eb",
+    color: palette.text,
     fontSize: 13,
     fontWeight: "600",
     textAlign: "center",

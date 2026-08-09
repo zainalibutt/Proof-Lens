@@ -1,26 +1,26 @@
 ﻿/* Page Layout */
 .page {
-  max-width: 1140px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 28px 80px;
+  padding: 0 32px 64px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 /* Hero Header */
 .hero {
   position: relative;
-  padding: 48px 0 32px;
-  margin-bottom: 32px;
+  padding: 18px 0 16px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .hero__bg {
-  position: absolute;
-  inset: -40px -200px;
-  z-index: -1;
-  background: radial-gradient(ellipse 70% 100% at 50% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
 .hero__content {
@@ -33,39 +33,56 @@
 .hero__brand {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 11px;
 }
 
-.hero__logo {
-  height: 52px;
-  width: auto;
-  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
-  transition: filter var(--duration-normal) var(--ease-out);
-}
-.hero__logo:hover {
-  filter: drop-shadow(0 0 28px rgba(99, 102, 241, 0.6));
+.hero__mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--primary-light);
+  background: var(--primary-subtle);
+  border: 1px solid rgba(131, 161, 255, 0.24);
+  border-radius: 11px;
 }
 
 .hero__title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 40%, #6366f1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 720;
+  letter-spacing: -0.025em;
 }
 
 .hero__subtitle {
   margin: 2px 0 0;
-  font-size: 0.875rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   color: var(--text-secondary);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.015em;
 }
 
 .hero__right {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-actions__identity {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+.session-actions__guide,
+.session-actions__sign-out {
+  padding: 7px 11px;
 }

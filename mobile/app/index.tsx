@@ -1,20 +1,21 @@
-// mobile/app/index.tsx
 import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
+  StyleSheet,
 } from "react-native";
 import Constants from "expo-constants";
+import { Focus, Mail } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
+import { palette, radius } from "../lib/theme";
 
 const PASSWORD_RESET_REDIRECT =
   process.env.EXPO_PUBLIC_WEB_BASE ||
@@ -23,45 +24,21 @@ const PASSWORD_RESET_REDIRECT =
 
 const goHome = (router: any) => router.replace("/home");
 
-async function probeAuth() {
-  try {
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
-      method: "GET",
-      headers: { apikey: SUPABASE_ANON_KEY },
-    });
-    console.warn("supabase /auth/v1/health:", r.status);
-  } catch (e) {
-    console.warn("supabase auth health failed:", e);
-  }
-}
-
 export default function FrontPage() {
   const router = useRouter();
-
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // user-defined pw
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already signed in, go straight to home
   useEffect(() => {
     let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted && data.session) goHome(router);
+    });
 
-    const init = async () => {
-      await probeAuth();
-
-      const { data } = await supabase.auth.getSession();
-      if (mounted && data.session) {
-        goHome(router);
-      }
-    };
-
-    init();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
-      if (session) {
-        goHome(router);
-      }
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) goHome(router);
     });
 
     return () => {
@@ -71,42 +48,28 @@ export default function FrontPage() {
   }, [router]);
 
   const onSignIn = async () => {
-    if (!email || !password) {
-      return Alert.alert("Missing details", "Enter both email and password.");
-    }
+    if (!email || !password) return Alert.alert("Missing details", "Enter both email and password.");
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      // onAuthStateChange will navigate on success
-    } catch (e: any) {
-      console.warn("[signin error]", e);
-      Alert.alert("Sign in failed", e.message || String(e));
+    } catch (error: any) {
+      Alert.alert("Sign in failed", error.message || String(error));
     } finally {
       setLoading(false);
     }
   };
 
   const onSignUp = async () => {
-    if (!email || !password) {
-      return Alert.alert("Missing details", "Enter both email and a new password.");
-    }
+    if (!email || !password) return Alert.alert("Missing details", "Enter both email and a new password.");
     try {
       setLoading(true);
       const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        console.warn("[signup error]", error);
-        throw error;
-      }
-
-      // Optional: ping auth health after signup
-      await probeAuth();
-
+      if (error) throw error;
       Alert.alert("Check your inbox", "Confirm your email, then sign in.");
       setMode("signin");
-    } catch (e: any) {
-      console.warn("[signup catch]", e);
-      Alert.alert("Sign up failed", e.message || String(e));
+    } catch (error: any) {
+      Alert.alert("Sign up failed", error.message || String(error));
     } finally {
       setLoading(false);
     }
@@ -116,13 +79,11 @@ export default function FrontPage() {
     if (!email) return Alert.alert("Enter your email first");
     try {
       setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: PASSWORD_RESET_REDIRECT,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: PASSWORD_RESET_REDIRECT });
       if (error) throw error;
       Alert.alert("Password reset", "Check your email for a reset link.");
-    } catch (e: any) {
-      Alert.alert("Reset error", e.message || String(e));
+    } catch (error: any) {
+      Alert.alert("Reset error", error.message || String(error));
     } finally {
       setLoading(false);
     }
@@ -132,158 +93,113 @@ export default function FrontPage() {
     if (!email) return Alert.alert("Enter your email first");
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true },
-      });
+      const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
       if (error) throw error;
       Alert.alert("Magic link sent", "Check your inbox to sign in.");
-    } catch (e: any) {
-      Alert.alert("Magic link error", e.message || String(e));
+    } catch (error: any) {
+      Alert.alert("Magic link error", error.message || String(error));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0a0e17" }}>
-      <KeyboardAvoidingView
-        behavior={Platform.select({ ios: "padding", android: undefined })}
-        style={{ flex: 1 }}
-      >
-        <View style={{ flex: 1, padding: 24, justifyContent: "center" }}>
-          {/* Logo */}
-          <View style={{ alignItems: "center", marginBottom: 48 }}>
-            <View style={{ width: 80, height: 80, borderRadius: 20, backgroundColor: "#151b2b", alignItems: "center", justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: "#1f2937" }}>
-              <Image source={require("../assets/images/logo.png")} style={{ width: 60, height: 60 }} resizeMode="contain" />
-            </View>
-            <Text style={{ color: "white", fontSize: 32, fontWeight: "700", letterSpacing: -0.5 }}>
-              ProofLens
-            </Text>
-            <Text style={{ color: "#9ca3af", fontSize: 15, marginTop: 8, textAlign: "center" }}>
-              Cryptographic capture verification with timestamped evidence
-            </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView behavior={Platform.select({ ios: "padding", android: undefined })} style={styles.flex}>
+        <View style={styles.container}>
+          <View style={styles.brandBlock}>
+            <View style={styles.brandMark}><Focus color={palette.primary} size={30} strokeWidth={1.7} /></View>
+            <Text style={styles.brand}>ProofLens</Text>
+            <Text style={styles.tagline}>Capture proof. Verify independently.</Text>
           </View>
 
-          <View style={{ gap: 16 }}>
+          <View style={styles.form}>
             <View>
-              <Text style={{ color: "#9ca3af", marginBottom: 8, fontSize: 14, fontWeight: "600" }}>Email</Text>
+              <Text style={styles.label}>Email</Text>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                autoComplete="email"
                 placeholder="you@example.com"
-                placeholderTextColor="#6b7280"
-                style={{
-                  backgroundColor: "#111827",
-                  color: "white",
-                  padding: 14,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: "#1f2937",
-                  fontSize: 15,
-                }}
+                placeholderTextColor={palette.textMuted}
+                style={styles.input}
               />
             </View>
 
             <View>
-              <Text style={{ color: "#9ca3af", marginBottom: 8, fontSize: 14, fontWeight: "600" }}>Password</Text>
+              <Text style={styles.label}>Password</Text>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
                 placeholder={mode === "signin" ? "Your password" : "Create a password"}
-                placeholderTextColor="#6b7280"
-                style={{
-                  backgroundColor: "#111827",
-                  color: "white",
-                  padding: 14,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: "#1f2937",
-                  fontSize: 15,
-                }}
+                placeholderTextColor={palette.textMuted}
+                style={styles.input}
+                onSubmitEditing={mode === "signin" ? onSignIn : onSignUp}
               />
             </View>
           </View>
 
-          <View style={{ height: 16 }} />
-
           {loading ? (
-            <ActivityIndicator color="#6366f1" size="large" />
-          ) : mode === "signin" ? (
+            <ActivityIndicator color={palette.primary} size="large" style={styles.loader} />
+          ) : (
+            <Pressable onPress={mode === "signin" ? onSignIn : onSignUp} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
+              <Text style={styles.primaryButtonText}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
+            </Pressable>
+          )}
+
+          {mode === "signin" ? (
             <>
-              <TouchableOpacity
-                onPress={onSignIn}
-                style={{
-                  backgroundColor: "#6366f1",
-                  padding: 16,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  shadowColor: "#6366f1",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>Sign in</Text>
-              </TouchableOpacity>
-
-              <View style={{ height: 16 }} />
-
-              <TouchableOpacity onPress={onResetPassword} style={{ padding: 8 }}>
-                <Text style={{ color: "#9ca3af", textAlign: "center", fontSize: 14 }}>Forgot password?</Text>
-              </TouchableOpacity>
-
-              <View style={{ height: 8 }} />
-
-              <TouchableOpacity onPress={onMagicLink} style={{ padding: 8 }}>
-                <Text style={{ color: "#9ca3af", textAlign: "center", fontSize: 14 }}>
-                  ✉️ Or send me a magic link
-                </Text>
-              </TouchableOpacity>
-
-              <View style={{ height: 24 }} />
-
-              <TouchableOpacity onPress={() => setMode("signup")} style={{ padding: 8 }}>
-                <Text style={{ color: "#e8f0ff", textAlign: "center", fontSize: 15 }}>
-                  New here? <Text style={{ color: "#818cf8", fontWeight: "600" }}>Create an account</Text>
-                </Text>
-              </TouchableOpacity>
+              <Pressable onPress={onResetPassword} style={styles.textButton}>
+                <Text style={styles.textButtonLabel}>Forgot password?</Text>
+              </Pressable>
+              <Pressable onPress={onMagicLink} style={styles.magicButton}>
+                <Mail color={palette.textSecondary} size={15} />
+                <Text style={styles.magicButtonLabel}>Send me a magic link</Text>
+              </Pressable>
+              <View style={styles.switchRow}>
+                <Text style={styles.switchCopy}>New to ProofLens?</Text>
+                <Pressable onPress={() => setMode("signup")}><Text style={styles.switchAction}>Create an account</Text></Pressable>
+              </View>
             </>
           ) : (
-            <>
-              <TouchableOpacity
-                onPress={onSignUp}
-                style={{
-                  backgroundColor: "#10b981",
-                  padding: 16,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>✨ Create account</Text>
-              </TouchableOpacity>
-
-              <View style={{ height: 24 }} />
-
-              <TouchableOpacity onPress={() => setMode("signin")} style={{ padding: 8 }}>
-                <Text style={{ color: "#e8f0ff", textAlign: "center", fontSize: 15 }}>
-                  Already have an account?{" "}
-                  <Text style={{ color: "#818cf8", fontWeight: "600" }}>Sign in instead</Text>
-                </Text>
-              </TouchableOpacity>
-            </>
+            <View style={styles.switchRow}>
+              <Text style={styles.switchCopy}>Already have an account?</Text>
+              <Pressable onPress={() => setMode("signin")}><Text style={styles.switchAction}>Sign in instead</Text></Pressable>
+            </View>
           )}
+
+          <Text style={styles.boundary}>ProofLens verifies provenance, not whether a scene itself was truthful.</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: palette.background },
+  container: { flex: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 32 },
+  brandBlock: { alignItems: "center", marginBottom: 46 },
+  brandMark: { width: 68, height: 68, alignItems: "center", justifyContent: "center", borderRadius: radius.xl, backgroundColor: palette.primarySoft, borderWidth: 1, borderColor: palette.borderStrong, marginBottom: 18 },
+  brand: { color: palette.text, fontSize: 30, fontWeight: "700", letterSpacing: -1 },
+  tagline: { color: palette.textSecondary, fontSize: 14, marginTop: 8 },
+  form: { gap: 16 },
+  label: { color: palette.textSecondary, fontSize: 12, fontWeight: "600", marginBottom: 8 },
+  input: { minHeight: 52, paddingHorizontal: 15, color: palette.text, fontSize: 15, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, borderRadius: radius.md },
+  loader: { minHeight: 52, marginTop: 18 },
+  primaryButton: { minHeight: 52, alignItems: "center", justifyContent: "center", borderRadius: radius.md, backgroundColor: palette.primary, marginTop: 18 },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  pressed: { opacity: 0.82 },
+  textButton: { alignItems: "center", paddingVertical: 14 },
+  textButtonLabel: { color: palette.textSecondary, fontSize: 13 },
+  magicButton: { minHeight: 46, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", borderRadius: radius.md, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border },
+  magicButtonLabel: { color: palette.textSecondary, fontSize: 13, fontWeight: "600" },
+  switchRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 5, marginTop: 28 },
+  switchCopy: { color: palette.textMuted, fontSize: 13 },
+  switchAction: { color: palette.primary, fontSize: 13, fontWeight: "700" },
+  boundary: { color: palette.textMuted, fontSize: 11, lineHeight: 16, textAlign: "center", marginTop: 40, paddingHorizontal: 24 },
+});

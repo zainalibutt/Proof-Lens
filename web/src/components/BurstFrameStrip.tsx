@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { Image } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
@@ -19,6 +19,8 @@ interface BurstFrameStripProps {
 }
 
 export default function BurstFrameStrip({ frames, selectedFrameId, onFrameClick }: BurstFrameStripProps) {
+  const [failedFrames, setFailedFrames] = useState<Set<string>>(() => new Set());
+
   if (!frames.length) return null;
 
   return (
@@ -27,6 +29,8 @@ export default function BurstFrameStrip({ frames, selectedFrameId, onFrameClick 
         {frames.map((frame, idx) => {
           const isSelected = frame.id === selectedFrameId;
           const thumbUrl = frame.media_url ?? null;
+          const frameKey = frame.id ?? String(idx);
+          const capturedAt = frame.timestamp ? new Date(frame.timestamp).toLocaleString() : "time unavailable";
 
           return (
             <button
@@ -35,9 +39,18 @@ export default function BurstFrameStrip({ frames, selectedFrameId, onFrameClick 
               className={`burst-strip__frame ${isSelected ? "burst-strip__frame--selected" : ""}`}
               onClick={() => onFrameClick?.(frame)}
               title={`Frame ${idx + 1}`}
+              aria-label={`Open frame ${idx + 1}, ${frame.status ?? "pending"}, captured ${capturedAt}`}
+              aria-pressed={isSelected}
             >
-              {thumbUrl ? (
-                <img src={thumbUrl} alt={`Frame ${idx + 1}`} className="burst-strip__thumb" loading="lazy" />
+              {thumbUrl && !failedFrames.has(frameKey) ? (
+                <img
+                  src={thumbUrl}
+                  alt={`Frame ${idx + 1}, captured ${capturedAt}`}
+                  className="burst-strip__thumb"
+                  loading="lazy"
+                  decoding="async"
+                  onError={() => setFailedFrames((current) => new Set(current).add(frameKey))}
+                />
               ) : (
                 <div className="burst-strip__placeholder">
                   <Image size={16} strokeWidth={1.5} />

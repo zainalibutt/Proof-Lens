@@ -1,12 +1,22 @@
 import { useMemo } from "react";
-import { QrCode, Smartphone, ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  QrCode,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { getExpoLink } from "../lib/mobileLink";
 
 const isDev = import.meta.env.DEV;
-const EXPO_GO_URL = "https://expo.dev/go";
-const EXPO_GO_IOS_URL = "https://apps.apple.com/app/expo-go/id982107779";
-const EXPO_GO_ANDROID_URL = "https://play.google.com/store/apps/details?id=host.exp.exponent";
+const ANDROID_INSTALL_URL = String(import.meta.env.VITE_MOBILE_ANDROID_INSTALL_URL || "").trim();
+const IOS_INSTALL_URL = String(import.meta.env.VITE_MOBILE_IOS_INSTALL_URL || "").trim();
+const INSTALLED_APP_URL = String(
+  import.meta.env.VITE_MOBILE_DEEP_LINK || import.meta.env.VITE_EXPO_PROD_DEEP_LINK || "prooflens://",
+).trim();
 
 type MobilePlatform = "ios" | "android" | "other";
 
@@ -16,7 +26,6 @@ type Props = {
 
 export default function MobileConnectPanel({ emailHint }: Props) {
   const linkInfo = useMemo(() => getExpoLink(), []);
-  const productionDeepLink = !isDev ? linkInfo.link : null;
   const platform: MobilePlatform = useMemo(() => {
     if (typeof navigator === "undefined") return "other";
     const ua = navigator.userAgent.toLowerCase();
@@ -25,22 +34,19 @@ export default function MobileConnectPanel({ emailHint }: Props) {
     return "other";
   }, []);
 
-  const platformStoreUrl = useMemo(() => {
-    if (platform === "ios") return EXPO_GO_IOS_URL;
-    if (platform === "android") return EXPO_GO_ANDROID_URL;
-    return EXPO_GO_URL;
-  }, [platform]);
-
-  const platformLabel = platform === "ios" ? "iOS" : platform === "android" ? "Android" : "Desktop";
-
-  function openOnMobile() {
-    if (productionDeepLink) {
-      window.location.href = productionDeepLink;
-      return;
-    }
-
-    window.location.href = platformStoreUrl;
-  }
+  const platformLabel = platform === "ios" ? "iPhone" : platform === "android" ? "Android" : "desktop";
+  const preferredInstallUrl = platform === "ios"
+    ? IOS_INSTALL_URL
+    : platform === "android"
+      ? ANDROID_INSTALL_URL
+      : ANDROID_INSTALL_URL || IOS_INSTALL_URL;
+  const preferredInstallLabel = platform === "ios"
+    ? "Join the iOS preview"
+    : platform === "android"
+      ? "Install ProofLens"
+      : ANDROID_INSTALL_URL
+        ? "Get the Android preview"
+        : "Join the iOS preview";
 
   function renderDevQR() {
     return (
@@ -87,69 +93,74 @@ export default function MobileConnectPanel({ emailHint }: Props) {
   }
 
   function renderProductionInstructions() {
+    const releaseAvailable = Boolean(preferredInstallUrl);
+
     return (
       <div className="mobile-connect-panel__body mobile-connect-panel__body--prod">
         <div className="mobile-connect-panel__prod-card">
-          {productionDeepLink && (
-            <div className="mobile-connect-panel__qr-wrap" style={{ marginBottom: 16 }}>
-              <div className="mobile-connect-panel__qr-box">
-                <QRCodeSVG value={productionDeepLink} size={176} bgColor="transparent" fgColor="#d7dcff" includeMargin />
+          <div className="mobile-connect-panel__release-grid">
+            <div className="mobile-connect-panel__release-copy">
+              <span className="mobile-connect-panel__release-label">
+                <ShieldCheck size={13} strokeWidth={2.2} /> Private preview
+              </span>
+              <h4>Install once. Capture in seconds.</h4>
+              <p className="muted">
+                ProofLens signs each capture on your device, uploads it securely and anchors the evidence automatically.
+              </p>
+
+              <div className="mobile-connect-panel__actions">
+                {releaseAvailable ? (
+                  <a
+                    className="mobile-connect-panel__open-btn"
+                    href={preferredInstallUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Download size={16} strokeWidth={2} />
+                    {preferredInstallLabel}
+                    <ExternalLink size={14} strokeWidth={2} />
+                  </a>
+                ) : (
+                  <span className="mobile-connect-panel__availability">Mobile preview is being prepared.</span>
+                )}
+
+                <a className="mobile-connect-panel__secondary-btn" href={INSTALLED_APP_URL}>
+                  <Smartphone size={15} strokeWidth={2} /> Already installed? Open ProofLens
+                </a>
               </div>
-              <div className="mobile-connect-panel__link mono">{productionDeepLink}</div>
-              <p className="mobile-connect-panel__helper muted">
-                <QrCode size={13} strokeWidth={2} style={{ verticalAlign: "-2px", marginRight: 6 }} />
-                Scan this QR with your phone to open in Expo Go.
+
+              <p className="mobile-connect-panel__hint muted">
+                Detected: {platformLabel}{emailHint ? ` · Sign in as ${emailHint}` : ""}
               </p>
             </div>
-          )}
 
-          <button
-            className="mobile-connect-panel__open-btn"
-            onClick={openOnMobile}
-          >
-            <Smartphone size={16} strokeWidth={2} />
-            {productionDeepLink ? "Open on Mobile" : `Get Expo Go for ${platformLabel}`}
-            <ExternalLink size={14} strokeWidth={2} />
-          </button>
-
-          <p className="mobile-connect-panel__hint muted">Detected device: {platformLabel}</p>
+            {releaseAvailable && (
+              <div className="mobile-connect-panel__qr-wrap mobile-connect-panel__install-qr">
+                <div className="mobile-connect-panel__qr-box">
+                  <QRCodeSVG value={preferredInstallUrl} size={176} bgColor="transparent" fgColor="#d7dcff" includeMargin />
+                </div>
+                <p className="mobile-connect-panel__helper muted">
+                  <QrCode size={13} strokeWidth={2} /> Scan with your phone to install
+                </p>
+              </div>
+            )}
+          </div>
 
           <div className="mobile-connect-panel__steps">
-            <h4>Getting Started</h4>
+            <h4>From install to verified evidence</h4>
             <ol>
-              <li><CheckCircle2 size={13} strokeWidth={2} /> Install Expo Go on your phone</li>
-              <li><CheckCircle2 size={13} strokeWidth={2} /> Run the mobile app locally (for demo)</li>
-              <li><CheckCircle2 size={13} strokeWidth={2} /> Sign in with the same account</li>
-              <li><CheckCircle2 size={13} strokeWidth={2} /> Capture media and return here</li>
+              <li><CheckCircle2 size={13} strokeWidth={2} /> Install the signed ProofLens preview</li>
+              <li><CheckCircle2 size={13} strokeWidth={2} /> Sign in with this account</li>
+              <li><CheckCircle2 size={13} strokeWidth={2} /> Capture — signing, upload and anchoring happen automatically</li>
+              <li><CheckCircle2 size={13} strokeWidth={2} /> Return to Evidence and refresh to inspect the result</li>
             </ol>
           </div>
 
-          {emailHint && (
-            <p className="mobile-connect-panel__hint muted">Sign in as: {emailHint}</p>
+          {platform === "ios" && !IOS_INSTALL_URL && ANDROID_INSTALL_URL && (
+            <p className="mobile-connect-panel__platform-note">
+              The Android preview is ready first. iPhone distribution needs the separate Apple/TestFlight signing checkpoint.
+            </p>
           )}
-
-          <div className="mobile-connect-panel__deep-link">
-            {productionDeepLink ? (
-              <>
-                <p className="muted">Already installed? Open directly:</p>
-                <a href={productionDeepLink} className="mobile-connect-panel__deep-link-url mono">
-                  {productionDeepLink}
-                </a>
-              </>
-            ) : (
-              <>
-                <p className="muted">Already installed? Set VITE_EXPO_PROD_DEEP_LINK for one-tap opening.</p>
-                <div className="mobile-connect-panel__store-links">
-                  <a href={EXPO_GO_IOS_URL} className="mobile-connect-panel__deep-link-url" target="_blank" rel="noreferrer">
-                    iOS App Store
-                  </a>
-                  <a href={EXPO_GO_ANDROID_URL} className="mobile-connect-panel__deep-link-url" target="_blank" rel="noreferrer">
-                    Android Play Store
-                  </a>
-                </div>
-              </>
-            )}
-          </div>
         </div>
       </div>
     );

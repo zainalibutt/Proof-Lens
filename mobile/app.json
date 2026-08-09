@@ -2,6 +2,7 @@
   "expo": {
     "name": "ProofLens",
     "slug": "prooflens",
+    "owner": "zainalibutt",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -11,17 +12,28 @@
     ],
     "userInterfaceStyle": "automatic",
     "extra": {
-      "EXPO_PUBLIC_API_BASE": "https://proof-lens-production.up.railway.app"
+      "EXPO_PUBLIC_API_BASE": "https://proof-lens-production.up.railway.app",
+      "router": {},
+      "eas": {
+        "projectId": "9f546a4a-1fdc-4352-a7e6-cf980022225f"
+      }
     },
     "ios": {
+      "bundleIdentifier": "com.zainalibutt.prooflens",
       "supportsTablet": true,
       "infoPlist": {
+        "NSCameraUsageDescription": "ProofLens uses the camera to create signed evidence at the moment of capture.",
+        "NSLocationWhenInUseUsageDescription": "ProofLens can attach optional location context to evidence when you allow it.",
         "NSMicrophoneUsageDescription": "ProofLens requires microphone access to record audio evidence."
       }
     },
     "android": {
+      "package": "com.zainalibutt.prooflens",
       "permissions": [
-        "RECORD_AUDIO"
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -41,9 +53,9 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#0b0f1d",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#0b0f1d"
           }
         }
       ],
