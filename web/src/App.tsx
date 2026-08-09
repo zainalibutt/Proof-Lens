@@ -15,7 +15,6 @@ import NavBar from "./components/NavBar";
 import StatusBadge from "./components/StatusBadge";
 import TutorialOverlay from "./components/TutorialOverlay";
 import { webTutorialSteps } from "./lib/tutorialSteps";
-import logoImage from "./logo.png";
 
 import DashboardPage from "./pages/DashboardPage";
 import CapturePage from "./pages/CapturePage";
@@ -24,16 +23,15 @@ import EvidencePage from "./pages/EvidencePage";
 
 import {
   Shield,
-  ExternalLink,
   LogOut,
   Lock,
   Mail,
   KeyRound,
-  Image as ImageIcon,
   Music,
   Hash,
   Anchor,
   FileKey,
+  Focus,
 } from "lucide-react";
 
 /* Lazy-loaded components */
@@ -126,7 +124,7 @@ function AudioSharePage() {
           </div>
         </SectionCard>
         <footer className="footer">
-          <img src={logoImage} alt="ProofLens" className="footer-logo" />
+          <span className="footer-brand"><Focus size={14} /> ProofLens</span>
           <span className="muted footer-text">
             <Lock size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4 }} />
             Secure cryptographic verification
@@ -224,7 +222,7 @@ function ImageSharePage() {
           </div>
         </SectionCard>
         <footer className="footer">
-          <img src={logoImage} alt="ProofLens" className="footer-logo" />
+          <span className="footer-brand"><Focus size={14} /> ProofLens</span>
           <span className="muted footer-text">
             <Lock size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4 }} />
             Secure cryptographic verification
@@ -242,38 +240,6 @@ function AuthPage() {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authInfo, setAuthInfo] = useState<string | null>(null);
   const [credsError, setCredsError] = useState<string | null>(null);
-
-  const systemOverview = (
-    <div className="system-overview fade-in">
-      <h2 className="system-overview__title">Cryptographic Media Verification System</h2>
-      <p className="system-overview__desc">
-        ProofLens hashes and signs captured media, then requests RFC 3161 timestamp anchoring &mdash; creating tamper-evident records that can be checked in the app or from an offline evidence bundle.
-      </p>
-      <div className="system-overview__features">
-        <div className="system-overview__feature"><Shield size={16} strokeWidth={2} /> Tamper-evident records</div>
-        <div className="system-overview__feature"><Lock size={16} strokeWidth={2} /> Cryptographic integrity (hash + signature)</div>
-        <div className="system-overview__feature"><Anchor size={16} strokeWidth={2} /> RFC 3161 timestamp anchoring</div>
-        <div className="system-overview__feature"><ExternalLink size={16} strokeWidth={2} /> Verifiable anywhere</div>
-      </div>
-      <div className="pipeline-flow">
-        {[
-          { Icon: ImageIcon, label: "Capture" },
-          { Icon: Hash, label: "Hash" },
-          { Icon: FileKey, label: "Sign" },
-          { Icon: Anchor, label: "Anchor" },
-          { Icon: Shield, label: "Verify" },
-        ].map(({ Icon, label }, i, arr) => (
-          <React.Fragment key={label}>
-            <div className="pipeline-step">
-              <div className="pipeline-step__icon"><Icon size={20} strokeWidth={1.5} /></div>
-              <span className="pipeline-step__label">{label}</span>
-            </div>
-            {i < arr.length - 1 && <div className="pipeline-connector" />}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
 
   const onSignIn = async () => {
     setCredsError(null); setAuthInfo(null);
@@ -312,15 +278,33 @@ function AuthPage() {
   };
 
   return (
-    <div className="page">
-      <HeroHeader subtitle="Cryptographic Media Verification System" />
-      {systemOverview}
-      <SectionCard glow>
+    <div className="auth-page">
+      <section className="auth-product fade-in">
+        <div className="auth-product__brand"><Focus size={20} /> ProofLens</div>
+        <div className="auth-product__message">
+          <span className="auth-product__eyebrow">Independent media provenance</span>
+          <h1>Capture proof.<br />Verify independently.</h1>
+          <p>
+            A working research prototype for tamper-evident capture, device-linked signatures,
+            trusted timestamps and portable offline verification.
+          </p>
+          <div className="auth-product__proofs">
+            <span><Hash size={15} /> File integrity</span>
+            <span><FileKey size={15} /> Device-linked signature</span>
+            <span><Anchor size={15} /> Trusted time anchor</span>
+          </div>
+        </div>
+        <p className="auth-product__boundary">
+          ProofLens verifies provenance. It does not prove that a scene itself was truthful.
+        </p>
+      </section>
+
+      <section className="auth-access">
         <div className="auth-form auth-form--wide">
           <div className="auth-form__header auth-form__header--center">
-            <div className="auth-form__icon-ring"><Lock size={24} strokeWidth={1.5} /></div>
-            <h2>{authMode === "signin" ? "Sign In" : "Create Account"}</h2>
-            <p className="muted">Access your verified captures and manage evidence.</p>
+            <div className="auth-form__icon-ring"><Focus size={22} strokeWidth={1.6} /></div>
+            <h2>{authMode === "signin" ? "Welcome back" : "Create an account"}</h2>
+            <p className="muted">Open your capture and evidence workspace.</p>
           </div>
           {!supabase && (
             <div className="alert error">
@@ -366,7 +350,7 @@ function AuthPage() {
           {authInfo && <div className="alert success">{authInfo}</div>}
           {credsError && <div className="alert error">{credsError}</div>}
         </div>
-      </SectionCard>
+      </section>
     </div>
   );
 }
@@ -399,10 +383,10 @@ function AuthenticatedShell({ session, onSignOut }: { session: any; onSignOut: (
       </div>
 
       <footer className="footer">
-        <img src={logoImage} alt="ProofLens" className="footer-logo" />
+        <span className="footer-brand"><Focus size={14} /> ProofLens</span>
         <span className="muted footer-text">
           <Lock size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4 }} />
-          Secure cryptographic verification
+          Independently verifiable media provenance
         </span>
       </footer>
 

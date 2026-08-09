@@ -1,6 +1,5 @@
 import React from "react";
-import { Shield } from "lucide-react";
-import logoImage from "../logo.png";
+import { Focus } from "lucide-react";
 
 interface HeroHeaderProps {
   subtitle?: string;
@@ -13,12 +12,13 @@ export default function HeroHeader({ subtitle, rightContent }: HeroHeaderProps) 
       <div className="hero__bg" />
       <div className="hero__content">
         <div className="hero__brand">
-          <img src={logoImage} alt="ProofLens" className="hero__logo" />
+          <span className="hero__mark" aria-hidden="true">
+            <Focus size={22} strokeWidth={1.8} />
+          </span>
           <div>
             <h1 className="hero__title">ProofLens</h1>
             <p className="hero__subtitle">
-              <Shield size={12} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4, opacity: 0.6 }} />
-              {subtitle ?? "Cryptographic Media Verification System"}
+              {subtitle ?? "Capture proof. Verify independently."}
             </p>
           </div>
         </div>

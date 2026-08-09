@@ -49,9 +49,9 @@ export default function VerifyPage({ accessToken }: Props) {
     <Suspense fallback={<LazyFallback />}>
       <div className="stack fade-in" style={{ gap: 28 }}>
         <div className="page-intro">
-          <h2 className="page-intro__title">Verify Media</h2>
+          <h2 className="page-intro__title">Verify a file</h2>
           <p className="page-intro__desc muted">
-            Upload a file to verify its cryptographic authenticity. The system computes a SHA-256 hash and checks it against your signed, timestamped capture credentials.
+            ProofLens checks the file bytes, device signature and independent time anchor against the stored record.
           </p>
         </div>
 
@@ -61,14 +61,14 @@ export default function VerifyPage({ accessToken }: Props) {
               accept="image/*"
               file={uploadFile}
               onFile={setUploadFile}
-              label="Drag & drop an image here, or click to browse"
+              label="Drop the original image here, or choose a file"
               busy={verifyBusy}
             />
 
             <div className="row">
               <button onClick={onVerify} disabled={verifyBusy || !uploadFile}>
                 <Shield size={14} strokeWidth={2} />
-                {verifyBusy ? "Verifying\u2026" : "Verify"}
+                {verifyBusy ? "Checking proof\u2026" : "Check proof"}
               </button>
             </div>
 

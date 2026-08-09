@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
   Music,
   Clock,
+  Search,
 } from "lucide-react";
 
 const BurstFrameStrip = lazy(() => import("../components/BurstFrameStrip"));
@@ -78,9 +79,10 @@ export default function EvidencePage({ accessToken }: Props) {
   const [burstsError, setBurstsError] = useState<string | null>(null);
   const [expandedBurst, setExpandedBurst] = useState<BurstWithFrames | null>(null);
   const [expandBusy, setExpandBusy] = useState(false);
-  const [loadedViews, setLoadedViews] = useState({ captures: false, audio: false });
+  const [loadedViews, setLoadedViews] = useState({ captures: false, bursts: false, audio: false });
 
-  const [viewMode, setViewMode] = useState<"bursts" | "captures" | "audio">("bursts");
+  const [viewMode, setViewMode] = useState<"bursts" | "captures" | "audio">("captures");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Capture share and bundle state
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -120,6 +122,7 @@ export default function EvidencePage({ accessToken }: Props) {
       setSelectedCredId(null);
     } catch (e: any) { setBurstsError(e?.message || "Failed to load bursts"); } finally {
       setBurstsBusy(false);
+      setLoadedViews((current) => ({ ...current, bursts: true }));
     }
   }, [accessToken]);
 
@@ -136,20 +139,21 @@ export default function EvidencePage({ accessToken }: Props) {
   }, [accessToken]);
 
   useEffect(() => {
-    loadBursts();
-  }, [loadBursts]);
-
-  useEffect(() => {
     if (viewMode === "captures" && !loadedViews.captures) loadCreds();
+    if (viewMode === "bursts" && !loadedViews.bursts) loadBursts();
     if (viewMode === "audio" && !loadedViews.audio) loadAudio();
-  }, [loadAudio, loadCreds, loadedViews.audio, loadedViews.captures, viewMode]);
+  }, [loadAudio, loadBursts, loadCreds, loadedViews.audio, loadedViews.bursts, loadedViews.captures, viewMode]);
 
   /* Handlers */
   const onExpandBurst = async (burstId: string) => {
     setExpandBusy(true);
     try {
       const data = await fetchBurstWithFrames(accessToken, burstId);
-      if (data) setExpandedBurst(data);
+      if (data) {
+        setExpandedBurst(data);
+        const firstFrame = data.frames.anchored[0];
+        if (firstFrame) selectCapture(firstFrame);
+      }
     } catch (e: any) { setBurstsError(e?.message || "Failed to load burst frames"); } finally { setExpandBusy(false); }
   };
 
@@ -267,14 +271,29 @@ export default function EvidencePage({ accessToken }: Props) {
       });
   }, [creds]);
 
+  const filteredCredGroups = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return credGroups;
+    return credGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((capture) =>
+          [capture.id, capture.sha256, capture.device_id, capture.capture_device_id, capture.status]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(query)),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [credGroups, searchQuery]);
+
   /* Render */
   return (
     <Suspense fallback={<LazyFallback />}>
       <div className="stack fade-in" style={{ gap: 28 }}>
         <div className="page-intro">
-          <h2 className="page-intro__title">Your Evidence</h2>
+          <h2 className="page-intro__title">Evidence library</h2>
           <p className="page-intro__desc muted">
-            Browse your captured evidence. Each credential is cryptographically signed and timestamp-anchored.
+            Inspect the media, device signature and independent time anchor behind every record.
           </p>
         </div>
 
@@ -282,32 +301,47 @@ export default function EvidencePage({ accessToken }: Props) {
           <div className="evidence-workspace__collection">
           {/* Tabs + Refresh */}
           <SectionCard>
-          <div className="row space" style={{ marginBottom: 8 }}>
+          <div className="evidence-toolbar">
             <div className="tabs" role="tablist" aria-label="Evidence type">
-              <button role="tab" aria-selected={viewMode === "bursts"} className={viewMode === "bursts" ? "active" : ""} onClick={() => changeView("bursts")}>
-                <Layers size={13} strokeWidth={2} style={{ marginRight: 4 }} />
-                Bursts
-              </button>
               <button role="tab" aria-selected={viewMode === "captures"} className={viewMode === "captures" ? "active" : ""} onClick={() => changeView("captures")}>
                 <ImageIcon size={13} strokeWidth={2} style={{ marginRight: 4 }} />
-                All Frames
+                All media
+              </button>
+              <button role="tab" aria-selected={viewMode === "bursts"} className={viewMode === "bursts" ? "active" : ""} onClick={() => changeView("bursts")}>
+                <Layers size={13} strokeWidth={2} style={{ marginRight: 4 }} />
+                Sessions
               </button>
               <button role="tab" aria-selected={viewMode === "audio"} className={viewMode === "audio" ? "active" : ""} onClick={() => changeView("audio")}>
                 <Music size={13} strokeWidth={2} style={{ marginRight: 4 }} />
                 Audio
               </button>
             </div>
-            <button
-              className="secondary"
-              onClick={viewMode === "bursts" ? loadBursts : viewMode === "captures" ? loadCreds : loadAudio}
-              disabled={viewMode === "bursts" ? burstsBusy : viewMode === "captures" ? credsBusy : audioBusy}
-            >
-              {(viewMode === "bursts" ? burstsBusy : viewMode === "captures" ? credsBusy : audioBusy) ? (
-                <><div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Refreshing</>
-              ) : (
-                <><RefreshCw size={14} strokeWidth={2.5} /> Refresh</>
+            <div className="row" style={{ justifyContent: "flex-end" }}>
+              {viewMode === "captures" && (
+                <label className="evidence-search">
+                  <Search size={14} aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search hash or device"
+                    aria-label="Search evidence"
+                  />
+                </label>
               )}
-            </button>
+              <button
+                className="secondary"
+                onClick={viewMode === "bursts" ? loadBursts : viewMode === "captures" ? loadCreds : loadAudio}
+                disabled={viewMode === "bursts" ? burstsBusy : viewMode === "captures" ? credsBusy : audioBusy}
+                aria-label="Refresh evidence"
+              >
+                {(viewMode === "bursts" ? burstsBusy : viewMode === "captures" ? credsBusy : audioBusy) ? (
+                  <><div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Refreshing</>
+                ) : (
+                  <><RefreshCw size={14} strokeWidth={2.5} /> Refresh</>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Errors */}
@@ -385,9 +419,17 @@ export default function EvidencePage({ accessToken }: Props) {
           {/* Captures view */}
           {viewMode === "captures" && creds.length === 0 && !credsBusy && <EmptyState type="captures" />}
 
-          {viewMode === "captures" && creds.length > 0 && (
+          {viewMode === "captures" && creds.length > 0 && filteredCredGroups.length === 0 && (
+            <div className="evidence-search-empty">
+              <Search size={20} />
+              <strong>No matching evidence</strong>
+              <span>Try a shorter hash, device identifier or status.</span>
+            </div>
+          )}
+
+          {viewMode === "captures" && filteredCredGroups.length > 0 && (
             <div className="stack stagger">
-              {credGroups.map((group) => (
+              {filteredCredGroups.map((group) => (
                 <div key={group.day} className="date-group">
                   <div className="date-group__header">
                     <span className="date-group__label">{group.day}</span>

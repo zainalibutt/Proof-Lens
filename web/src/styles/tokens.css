@@ -1,22 +1,22 @@
 ﻿/* Design tokens */
 :root {
   color-scheme: dark;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   /* Navy palette */
-  --navy-950: #050a18;
-  --navy-900: #0a1128;
-  --navy-800: #0f1a3a;
-  --navy-700: #162350;
-  --navy-600: #1e2d68;
-  --navy-500: #2a3f8f;
+  --navy-950: #090b0f;
+  --navy-900: #0d1015;
+  --navy-800: #13171d;
+  --navy-700: #1a2028;
+  --navy-600: #222a35;
+  --navy-500: #303a48;
 
   /* Primary — Indigo */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #818cf8;
-  --primary-glow: rgba(99, 102, 241, 0.2);
-  --primary-subtle: rgba(99, 102, 241, 0.08);
+  --primary: #4f7cff;
+  --primary-hover: #3e6be8;
+  --primary-light: #83a1ff;
+  --primary-glow: rgba(79, 124, 255, 0.16);
+  --primary-subtle: rgba(79, 124, 255, 0.09);
 
   /* Accents */
   --success: #10b981;
@@ -30,27 +30,27 @@
   --error-glow: rgba(239, 68, 68, 0.2);
 
   /* Surfaces */
-  --bg-body: #050a18;
-  --bg-card: rgba(15, 23, 52, 0.65);
-  --bg-card-solid: #0f1734;
-  --bg-elevated: rgba(22, 35, 80, 0.45);
-  --bg-input: rgba(10, 17, 40, 0.7);
-  --bg-hover: rgba(99, 102, 241, 0.06);
+  --bg-body: #090b0f;
+  --bg-card: #101318;
+  --bg-card-solid: #101318;
+  --bg-elevated: #15191f;
+  --bg-input: #0d1014;
+  --bg-hover: #1a2028;
 
   /* Borders */
-  --border: rgba(99, 102, 241, 0.12);
-  --border-light: rgba(99, 102, 241, 0.2);
-  --border-strong: rgba(99, 102, 241, 0.35);
+  --border: rgba(230, 235, 243, 0.09);
+  --border-light: rgba(230, 235, 243, 0.16);
+  --border-strong: rgba(131, 161, 255, 0.48);
 
   /* Glass */
-  --glass-blur: 24px;
-  --glass-border: 1px solid rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px rgba(99, 102, 241, 0.15);
+  --glass-blur: 0px;
+  --glass-border: 1px solid var(--border);
+  --glass-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
 
   /* Typography */
-  --text-primary: #e8ecf4;
-  --text-secondary: #8b95b0;
-  --text-muted: #5a6380;
+  --text-primary: #f2f4f7;
+  --text-secondary: #a5adb8;
+  --text-muted: #6f7885;
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -60,9 +60,9 @@
   --duration-slow: 350ms;
 
   /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-full: 999px;
 }

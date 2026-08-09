@@ -13,6 +13,7 @@ import { createDraft, createBurst } from "../lib/api";
 import { getOrCreateInstallId } from "../lib/device";
 import { DeviceMotion } from "expo-sensors";
 import { supabase } from "../lib/supabase";
+import { palette, radius } from "../lib/theme";
 
 async function persistToDocuments(srcUri: string, b64?: string) {
   if (Platform.OS === "web") return b64 ? `data:image/jpeg;base64,${b64}` : srcUri;
@@ -247,25 +248,20 @@ export default function CaptureScreen() {
 
   if (!cameraPerm.granted) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, backgroundColor: "#0a0e17" }}>
-        <Text style={{ color: "#e8f0ff", fontSize: 20, fontWeight: "700", textAlign: "center", marginBottom: 12 }}>
-          Camera Access Required
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, backgroundColor: palette.background }}>
+        <Text style={{ color: palette.text, fontSize: 20, fontWeight: "700", textAlign: "center", marginBottom: 12 }}>
+          Allow camera access
         </Text>
-        <Text style={{ color: "#9ca3af", fontSize: 15, textAlign: "center", marginBottom: 32, lineHeight: 22 }}>
-          ProofLens needs camera permission to capture and cryptographically sign photos.
+        <Text style={{ color: palette.textSecondary, fontSize: 15, textAlign: "center", marginBottom: 32, lineHeight: 22 }}>
+          ProofLens uses the camera to capture the original file before hashing and signing it on this device.
         </Text>
         <Pressable 
           onPress={requestCameraPerm} 
           style={{ 
-            backgroundColor: "#6366f1", 
+            backgroundColor: palette.primary,
             paddingVertical: 14, 
             paddingHorizontal: 24, 
-            borderRadius: 12,
-            shadowColor: "#6366f1",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 4,
+            borderRadius: radius.md,
           }}
         >
           <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>Grant Permission</Text>
@@ -289,11 +285,11 @@ export default function CaptureScreen() {
       </View>
 
       {/* Burst Controls */}
-      <View style={{ paddingVertical: 16, paddingHorizontal: 16, backgroundColor: "#0a0e17", borderTopWidth: 1, borderTopColor: "#1f2937" }}>
+      <View style={{ paddingVertical: 16, paddingHorizontal: 16, backgroundColor: palette.background, borderTopWidth: 1, borderTopColor: palette.border }}>
         {/* Burst Mode Slider */}
         <View style={{ marginBottom: 12 }}>
-          <Text style={{ color: "#9ca3af", fontSize: 13, fontWeight: "600", marginBottom: 8 }}>
-            Burst Frames: {burstMode}
+          <Text style={{ color: palette.textSecondary, fontSize: 12, fontWeight: "600", marginBottom: 8 }}>
+            Frames per capture: {burstMode}
           </Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {([1, 5, 10] as const).map(n => (
@@ -304,15 +300,15 @@ export default function CaptureScreen() {
                   flex: 1,
                   paddingVertical: 12,
                   paddingHorizontal: 16,
-                  backgroundColor: burstMode === n ? "#6366f1" : "#151b2b",
+                  backgroundColor: burstMode === n ? palette.primary : palette.surfaceRaised,
                   borderRadius: 10,
                   borderWidth: 1,
-                  borderColor: burstMode === n ? "#6366f1" : "#1f2937",
+                  borderColor: burstMode === n ? palette.primary : palette.border,
                   alignItems: "center",
                 }}
               >
                 <Text style={{ 
-                  color: burstMode === n ? "#fff" : "#9ca3af", 
+                  color: burstMode === n ? "#fff" : palette.textSecondary,
                   fontWeight: burstMode === n ? "700" : "600",
                   fontSize: 16
                 }}>
@@ -330,44 +326,44 @@ export default function CaptureScreen() {
           justifyContent: "space-between",
           paddingVertical: 12,
           paddingHorizontal: 16,
-          backgroundColor: "#151b2b",
-          borderRadius: 10,
+          backgroundColor: palette.surfaceRaised,
+          borderRadius: radius.md,
           borderWidth: 1,
-          borderColor: "#1f2937",
+          borderColor: palette.border,
           marginBottom: 16,
         }}>
           <View>
-            <Text style={{ color: "#e8f0ff", fontSize: 15, fontWeight: "600", marginBottom: 2 }}>
-              Motion Trigger
+            <Text style={{ color: palette.text, fontSize: 15, fontWeight: "600", marginBottom: 2 }}>
+              Motion trigger
             </Text>
-            <Text style={{ color: "#6b7280", fontSize: 12 }}>
+            <Text style={{ color: palette.textMuted, fontSize: 12 }}>
               Auto-capture on movement
             </Text>
           </View>
           <Switch
             value={motionTrigger}
             onValueChange={setMotionTrigger}
-            trackColor={{ false: "#374151", true: "#6366f1" }}
+            trackColor={{ false: "#303844", true: palette.primary }}
             thumbColor="#fff"
           />
         </View>
       </View>
 
       {/* Action Bar */}
-      <View style={{ paddingVertical: 20, paddingHorizontal: 16, backgroundColor: "#0a0e17" }}>
+      <View style={{ paddingVertical: 20, paddingHorizontal: 16, backgroundColor: palette.background }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Pressable 
             onPress={flip} 
             style={{ 
               padding: 14, 
-              backgroundColor: "#151b2b", 
-              borderRadius: 12,
+              backgroundColor: palette.surfaceRaised,
+              borderRadius: radius.md,
               borderWidth: 1,
-              borderColor: "#1f2937",
+              borderColor: palette.border,
               minWidth: 80,
             }}
           >
-            <Text style={{ color: "#e8f0ff", fontWeight: "600", textAlign: "center" }}>Flip</Text>
+            <Text style={{ color: palette.text, fontWeight: "600", textAlign: "center" }}>Flip</Text>
           </Pressable>
 
           <Pressable
@@ -378,7 +374,7 @@ export default function CaptureScreen() {
               height: 76,
               borderRadius: 999,
               borderWidth: 4,
-              borderColor: busy ? "#374151" : "#6366f1",
+              borderColor: busy ? "#303844" : palette.primary,
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: busy ? "#1f2937" : "transparent",
@@ -389,7 +385,7 @@ export default function CaptureScreen() {
                 width: 56,
                 height: 56,
                 borderRadius: 999,
-                backgroundColor: busy ? "#374151" : "#6366f1",
+                backgroundColor: busy ? "#303844" : palette.primary,
               }}
             />
           </Pressable>
@@ -401,16 +397,16 @@ export default function CaptureScreen() {
               height: 64, 
               borderRadius: 12, 
               overflow: "hidden", 
-              backgroundColor: "#151b2b",
+              backgroundColor: palette.surfaceRaised,
               borderWidth: 1,
-              borderColor: "#1f2937",
+              borderColor: palette.border,
             }}
           >
             {recent?.mediaUri ? (
               <Image source={{ uri: recent.mediaUri }} style={{ width: "100%", height: "100%" }} />
             ) : (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: "#6b7280", fontSize: 11, fontWeight: "600" }}>Recent</Text>
+                <Text style={{ color: palette.textMuted, fontSize: 11, fontWeight: "600" }}>Recent</Text>
               </View>
             )}
           </Pressable>

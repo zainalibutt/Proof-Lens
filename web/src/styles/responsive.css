@@ -1,11 +1,20 @@
 ﻿/* Responsive */
 @media (max-width: 768px) {
+  .auth-page { display: block; }
+  .auth-product { min-height: auto; padding: 26px 22px 34px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .auth-product__message { margin-top: 42px; }
+  .auth-product__message h1 { font-size: clamp(2.75rem, 13vw, 3.6rem); }
+  .auth-product__message > p { font-size: 0.875rem; }
+  .auth-product__proofs,
+  .auth-product__boundary { display: none; }
+  .auth-access { padding: 38px 22px 64px; }
+
   .page { padding: 0 14px 112px; }
 
   .hero { padding: 14px 0 12px; margin-bottom: 16px; }
   .hero__title { font-size: 1.125rem; }
   .hero__subtitle { font-size: 0.6875rem; }
-  .hero__logo { height: 34px; }
+  .hero__mark { width: 36px; height: 36px; }
   .hero__content { align-items: center; gap: 10px; flex-wrap: wrap; }
   .hero__brand { gap: 9px; min-width: 0; }
   .hero__right { width: 100%; }
@@ -38,8 +47,8 @@
     margin: 0;
     border: 1px solid var(--border-light);
     border-radius: 18px;
-    background: rgba(10, 17, 40, 0.94);
-    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5);
+    background: rgba(16, 19, 24, 0.96);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.42);
     backdrop-filter: blur(20px);
   }
 
@@ -62,6 +71,10 @@
   .evidence-workspace__collection > .glass-card { padding: 14px; }
   .evidence-workspace__collection .row.space { gap: 10px; }
   .evidence-workspace__collection .row.space > button { width: 100%; justify-content: center; }
+  .evidence-toolbar { align-items: stretch; flex-direction: column; }
+  .evidence-toolbar > .row { width: 100%; }
+  .evidence-search { max-width: none; flex: 1 1 auto; }
+  .evidence-toolbar > .row > button { width: auto; }
   .evidence-workspace .detail-card { padding: 16px; }
   .evidence-burst__toggle > div { min-width: 0; }
   .evidence-burst__toggle .row { gap: 6px !important; align-items: center; }
@@ -110,23 +123,23 @@
     height: 172px;
   }
 
-  .pipeline-step__icon { width: 36px; height: 36px; }
-  .pipeline-step__label { font-size: 0.5625rem; }
-  .pipeline-connector { margin-top: 17px; flex: 0 1 20px; }
-
-  .system-overview__features { grid-template-columns: 1fr 1fr; }
-
-  .auth-form__label--mobile { font-size: 1rem; }
   .auth-form__primary { font-size: 0.9rem; min-height: 46px; }
+
+  .forensic-home__hero { grid-template-columns: 1fr; min-height: 0; }
+  .forensic-home__copy { padding: 38px 24px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .forensic-home__copy h2 { font-size: clamp(2.35rem, 12vw, 3.6rem); }
+  .forensic-home__assurance { padding: 28px 24px; }
+  .forensic-home__boundary { grid-template-columns: 1fr; gap: 12px; }
+  .forensic-home__library { padding: 20px; }
 }
 
 @media (max-width: 480px) {
   .hero__subtitle { max-width: 230px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .evidence-inspector__actions .secondary,
   .evidence-inspector__link { flex-basis: 100%; }
-  .system-overview__features { grid-template-columns: 1fr; }
-  .pipeline-connector { flex: 0 1 12px; }
-  .pipeline-step__icon { width: 32px; height: 32px; }
+  .forensic-home__actions { width: 100%; }
+  .forensic-home__actions button { width: 100%; justify-content: center; }
+  .forensic-home__library { grid-template-columns: 38px minmax(0, 1fr) 18px; gap: 14px; }
 }
 
 /* Legacy DropZone */
