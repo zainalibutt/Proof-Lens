@@ -16,6 +16,7 @@ import CaptureCard from "../components/CaptureCard";
 import EvidenceInspector from "../components/EvidenceInspector";
 import StatusBadge from "../components/StatusBadge";
 import EmptyState from "../components/EmptyState";
+import EvidenceSkeleton from "../components/EvidenceSkeleton";
 import {
   RefreshCw,
   ChevronDown,
@@ -417,6 +418,8 @@ export default function EvidencePage({ accessToken }: Props) {
           )}
 
           {/* Captures view */}
+          {viewMode === "captures" && credsBusy && creds.length === 0 && <EvidenceSkeleton />}
+
           {viewMode === "captures" && creds.length === 0 && !credsBusy && <EmptyState type="captures" />}
 
           {viewMode === "captures" && creds.length > 0 && filteredCredGroups.length === 0 && (
@@ -493,7 +496,13 @@ export default function EvidencePage({ accessToken }: Props) {
             aria-label="Evidence details"
           >
             <SectionCard className="evidence-inspector">
-              <EvidenceInspector
+              {viewMode === "captures" && credsBusy && !selectedCred ? (
+                <div className="evidence-inspector__loading" role="status">
+                  <div className="spinner" />
+                  <strong>Loading your evidence</strong>
+                  <span>Fetching credentials and secure media previews.</span>
+                </div>
+              ) : <EvidenceInspector
                 capture={selectedCred}
                 audio={selectedAudio}
                 mediaUrl={selectedMediaUrl}
@@ -518,7 +527,7 @@ export default function EvidencePage({ accessToken }: Props) {
                 onCopyAudioShare={onCopyAudioShare}
                 onDownloadAudioBundle={onDownloadAudioBundle}
                 onClose={closeInspector}
-              />
+              />}
             </SectionCard>
           </aside>
         </div>
