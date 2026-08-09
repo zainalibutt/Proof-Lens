@@ -97,6 +97,14 @@
     grid-template-columns: 1fr;
   }
 
+  .mobile-connect-panel__release-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-connect-panel__install-qr {
+    width: 100%;
+  }
+
   .mobile-connect-panel__qr-box {
     width: 172px;
     height: 172px;
