@@ -889,6 +889,53 @@ input::placeholder, .input::placeholder {
   font-size: 0.8125rem;
 }
 
+.mobile-connect-panel__build-meta {
+  margin-top: 6px;
+  font-size: 0.75rem;
+}
+
+.mobile-connect-panel__install-help {
+  margin-top: 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+}
+
+.mobile-connect-panel__install-help summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.mobile-connect-panel__install-help-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.mobile-connect-panel__install-help-body p {
+  margin: 14px 0 10px;
+}
+
+.mobile-connect-panel__install-help-body ol {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.mobile-connect-panel__install-help-body a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--primary);
+  font-weight: 650;
+}
+
 .mobile-connect-panel__platform-note {
   margin: 0;
   padding: 12px 14px;
