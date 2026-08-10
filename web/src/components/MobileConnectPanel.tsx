@@ -43,9 +43,9 @@ export default function MobileConnectPanel({ emailHint }: Props) {
   const preferredInstallLabel = platform === "ios"
     ? "Join the iOS preview"
     : platform === "android"
-      ? "Install ProofLens"
+      ? "Download Android APK"
       : ANDROID_INSTALL_URL
-        ? "Get the Android preview"
+        ? "Download Android APK"
         : "Join the iOS preview";
 
   function renderDevQR() {
@@ -132,6 +132,11 @@ export default function MobileConnectPanel({ emailHint }: Props) {
               <p className="mobile-connect-panel__hint muted">
                 Detected: {platformLabel}{emailHint ? ` · Sign in as ${emailHint}` : ""}
               </p>
+              {ANDROID_INSTALL_URL && platform !== "ios" && (
+                <p className="mobile-connect-panel__build-meta muted">
+                  Signed preview · v1.0.0 · 133 MB · Android 8 or newer
+                </p>
+              )}
             </div>
 
             {releaseAvailable && (
@@ -149,12 +154,41 @@ export default function MobileConnectPanel({ emailHint }: Props) {
           <div className="mobile-connect-panel__steps">
             <h4>From install to verified evidence</h4>
             <ol>
-              <li><CheckCircle2 size={13} strokeWidth={2} /> Install the signed ProofLens preview</li>
+              <li><CheckCircle2 size={13} strokeWidth={2} /> Download the APK, then open it from Downloads</li>
+              <li><CheckCircle2 size={13} strokeWidth={2} /> Approve installation from your browser when Android asks</li>
               <li><CheckCircle2 size={13} strokeWidth={2} /> Sign in with this account</li>
               <li><CheckCircle2 size={13} strokeWidth={2} /> Capture — signing, upload and anchoring happen automatically</li>
               <li><CheckCircle2 size={13} strokeWidth={2} /> Return to Evidence and refresh to inspect the result</li>
             </ol>
           </div>
+
+          {ANDROID_INSTALL_URL && platform !== "ios" && (
+            <details className="mobile-connect-panel__install-help" open={platform === "android"}>
+              <summary>Samsung downloaded the APK but will not install it?</summary>
+              <div className="mobile-connect-panel__install-help-body">
+                <p>
+                  New Samsung phones can block apps downloaded outside Google Play before the installer opens.
+                  ProofLens is a signed research preview, so the phone owner must approve this one installation.
+                </p>
+                <ol>
+                  <li>Open <strong>Settings → Security and privacy → Auto Blocker</strong> and turn it off temporarily.</li>
+                  <li>
+                    Open <strong>Settings → Security and privacy → More security settings → Install unknown apps</strong>.
+                  </li>
+                  <li>Choose the browser or <strong>My Files</strong>, then enable <strong>Allow from this source</strong>.</li>
+                  <li>Open <strong>Downloads → ProofLens-Android-v1.0.0.apk</strong>, then tap Install and Open.</li>
+                  <li>After installation, turn Auto Blocker back on and remove the temporary source permission.</li>
+                </ol>
+                <a
+                  href="https://www.samsung.com/us/support/answer/ANS10003636/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Samsung's Auto Blocker guidance <ExternalLink size={12} strokeWidth={2} />
+                </a>
+              </div>
+            </details>
+          )}
 
           {platform === "ios" && !IOS_INSTALL_URL && ANDROID_INSTALL_URL && (
             <p className="mobile-connect-panel__platform-note">
