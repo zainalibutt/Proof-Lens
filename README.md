@@ -245,6 +245,17 @@ web client. Detailed setup is in [`database/setup.md`](database/setup.md).
 - [Academic assessment walkthrough](docs/ACADEMIC_DEMO.md)
 - [Development and investigation timeline](docs/PROJECT_TIMELINE.md)
 
+## Related work
+
+ProofLens is one of a pair. [**Melody Terminal**](https://github.com/zainalibutt/Melody)
+applies the same idea to market data: a command-driven research terminal where every
+number states which provider answered, how stale it is, and when a fallback stood in for
+the preferred source.
+
+Both projects are about being honest regarding the limits of your own evidence. ProofLens
+makes a file's origin inspectable; Melody makes a number's origin inspectable. Neither
+claims more than it can demonstrate.
+
 ## Project context
 
 ProofLens was designed and built by [Zain Butt](https://www.linkedin.com/in/zain-butt-dev)
